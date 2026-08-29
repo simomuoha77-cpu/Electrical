@@ -141,6 +141,7 @@ const paymentSchema = new mongoose.Schema({
   merchantRequestId:  { type: String },
   status:             { type: String, default: "pending" },
   mpesaReceiptNumber: { type: String, default: "" },
+  resultDesc:         { type: String, default: "" },
   createdAt:          { type: Date, default: Date.now },
   completedAt:        { type: Date }
 });
@@ -812,7 +813,7 @@ const MPESA_CONFIG = {
   consumerSecret: process.env.MPESA_CONSUMER_SECRET || "",
   shortcode:      process.env.MPESA_SHORTCODE       || "",
   passkey:        process.env.MPESA_PASSKEY         || "",
-  callbackUrl:    process.env.MPESA_CALLBACK_URL    || "https://medical-training-co-ke.onrender.com/api/mpesa/callback",
+  callbackUrl:    process.env.MPESA_CALLBACK_URL    || "https://kmtclibrary.com/api/mpesa/callback",
   env:            process.env.MPESA_ENV             || "sandbox"
 };
 
@@ -886,7 +887,8 @@ app.post("/api/mpesa/callback", async (req, res) => {
       await User.findByIdAndUpdate(payment.userId, { $addToSet:{purchasedPdfs:payment.pdfId} });
       await logActivity("payment_completed", `Paid: ${payment.pdfTitle} KES ${payment.amount} ${receipt}`, payment.userId);
     } else {
-      payment.status="failed"; await payment.save();
+      payment.status="failed"; payment.resultDesc=ResultDesc||""; await payment.save();
+      console.log(`[M-Pesa Callback] Payment failed for ${payment.userId} — ResultCode:${ResultCode} ResultDesc:${ResultDesc}`);
     }
   } catch(err) { console.error("[M-Pesa Callback]", err.message); }
   res.json({ ResultCode:0, ResultDesc:"OK" });
@@ -895,7 +897,7 @@ app.post("/api/mpesa/callback", async (req, res) => {
 app.get("/api/mpesa/status/:checkoutId", userAuth, async (req, res) => {
   const payment = await Payment.findOne({ checkoutRequestId:req.params.checkoutId, userId:req.user._id.toString() });
   if (!payment) return res.json({ success:false, message:"Not found" });
-  res.json({ success:true, status:payment.status, receipt:payment.mpesaReceiptNumber });
+  res.json({ success:true, status:payment.status, receipt:payment.mpesaReceiptNumber, resultDesc:payment.resultDesc });
 });
 
 app.get("/api/mpesa/purchases", userAuth, async (req, res) => {

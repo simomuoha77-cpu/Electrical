@@ -975,7 +975,7 @@ async function submitPayment(){
     pollInt=setInterval(async()=>{
       attempts++;
       if(attempts>24){clearInterval(pollInt);alert('Payment timeout. Check My Purchases if you paid.');closeModal();return;}
-      try{const sr=await fetch(`/api/mpesa/status/${curCheckout}`,{headers:{'x-user-token':TOKEN}});const sd=await sr.json();if(sd.success&&sd.status==='completed'){clearInterval(pollInt);document.getElementById('mpesa-waiting').style.display='none';document.getElementById('mpesa-success').style.display='block';document.getElementById('mp-receipt').textContent=sd.receipt;myPurchasedIds.add(curPdfId);renderHomePdfs();renderLibrary(allPdfs);}else if(sd.success&&sd.status==='failed'){clearInterval(pollInt);alert('Payment failed or cancelled. Try again.');closeModal();}}catch(e){}
+      try{const sr=await fetch(`/api/mpesa/status/${curCheckout}`,{headers:{'x-user-token':TOKEN}});const sd=await sr.json();if(sd.success&&sd.status==='completed'){clearInterval(pollInt);document.getElementById('mpesa-waiting').style.display='none';document.getElementById('mpesa-success').style.display='block';document.getElementById('mp-receipt').textContent=sd.receipt;myPurchasedIds.add(curPdfId);renderHomePdfs();renderLibrary(allPdfs);}else if(sd.success&&sd.status==='failed'){clearInterval(pollInt);alert(sd.resultDesc?`Payment not completed: ${sd.resultDesc}`:'Payment failed or cancelled. Try again.');closeModal();}}catch(e){}
     },5000);
   }catch(e){alert('Error: '+e.message);btn.disabled=false;btn.innerHTML='<i class="fa-solid fa-lock"></i> Pay Now';}
 }
