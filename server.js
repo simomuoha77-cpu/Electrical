@@ -859,7 +859,10 @@ app.post("/api/mpesa/pay", userAuth, async (req, res) => {
       })
     });
     const d = await r.json();
-    if (d.ResponseCode !== "0") return res.json({ success:false, message:d.errorMessage||d.ResponseDescription||"STK Push failed" });
+    if (d.ResponseCode !== "0") {
+      console.error("M-Pesa STK push rejected. Raw Safaricom response:", JSON.stringify(d));
+      return res.json({ success:false, message:d.errorMessage||d.ResponseDescription||"STK Push failed" });
+    }
     const payment = await Payment.create({ userId:user._id.toString(), pdfId, pdfTitle:pdf.title, amount, phone:cleanPhone, checkoutRequestId:d.CheckoutRequestID, merchantRequestId:d.MerchantRequestID });
     await logActivity("payment_initiated", `Payment: ${pdf.title} KES ${amount}`, user._id.toString());
     res.json({ success:true, message:`STK sent to ${phone}. Enter M-Pesa PIN.`, checkoutRequestId:d.CheckoutRequestID, paymentId:payment._id });
