@@ -1375,21 +1375,6 @@ app.get("/api/apk/download", async (req, res) => {
 });
 
 // ============================
-// SELF-PING
-// ============================
-function startSelfPing() {
-  const SELF_URL = process.env.RENDER_EXTERNAL_URL || `http://localhost:${PORT}`;
-  setInterval(async () => {
-    try {
-      const r = await fetch(`${SELF_URL}/ping`);
-      const d = await r.json();
-      console.log(`🏓 Ping OK — uptime: ${d.uptime}s`);
-    } catch(err) { console.warn(`⚠️ Ping failed: ${err.message}`); }
-  }, 5 * 60 * 1000);
-  console.log(`✅ Self-ping started → ${SELF_URL}/ping`);
-}
-
-// ============================
 // START
 // ============================
 mongoose.connection.once("open", async () => {
@@ -1403,6 +1388,5 @@ mongoose.connection.once("open", async () => {
 ║  Admin  : /mbd-ctrl-9x7k2mz.html    ║
 ║  Storage: MongoDB GridFS ✅          ║
 ╚══════════════════════════════════════╝`);
-    startSelfPing();
   });
 });
